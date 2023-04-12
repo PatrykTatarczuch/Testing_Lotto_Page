@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pol" style="scroll-behavior: smooth;"> 
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <h1 class="head">Symulacja gry w Lotto<span style="font-size:20px;"
+    >&nbsp;&nbsp;Grasz na własną odpowiedzialność ;)</span></h1>
+	<div><b>Pamiętaj:</b></div>
+	<div>-liczby nie mogą się powtarzać</div>
+	<div>-liczby muszą być w przedziale od 1 do 49</div>
+	<div>-musisz podać dokładnie 6 liczb</div>
+	<div>-nie możesz wpisać znaków specjalnych oraz liter</div>
+  <div>-muszisz wpisać tylko liczby całkowite</div>
+  <hr style="color:rgb(0, 255, 255)">
+    <b><div class="here" style="color: yellow;">Tutaj wpisz swoich 6 liczb:</div></b>
+    <form method="POST" action="/">
+      {% for i in range(6) %}
+      <input type="number" name="number{{ i+1 }}" min="1" max="49" required oninput="checkDuplicates()" onkeypress="if(event.keyCode===13) {document.getElementsByName('number'+(parseInt(event.target.name.replace('number',''))+1))[0].focus(); return false;}">		{% if request.form.get("number"|string + (i+1)|string) %}
+		{% if i == 5 and list %}
+		  <p id="randloss" style="color:yellow">Losowe liczby: {{ list }}</p>
+		{% endif %}
+	    {% endif %}
+      {% endfor %}
+      <button type="submit" id="submitBtn" onclick="checkNumbers()">Losuj</button>
+    </form>
+    <p id="errorMsg" style="color:red"></p>
+    {% if request.method == 'POST' and list %}
+      {% if list_loss %}
+        <p style="color:yellow">Trafiłeś takie liczby: {{ list_loss }}</p>
+      {% else %}
+        {% if request.form.get('number6') %}
+          <p class="nope"><b>Nie udało Ci się zgadnąć ani jednej liczby :(</b></p>
+        {% endif %}
+      {% endif %}
+    {% endif %}
+    {% if list_cor %}
+      <p style="color:yellow">Liczba trafień: {{ list_cor }}</p>
+    {% endif %}
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul class=flashes>
+      {% for message in messages %}
+        <li>{{ message }}</li>
+	   {% if request.form.get("number"|string + (i+1)|string) %}
+          {% if i == 5 and list %}
+            <p style="color:yellow">Losowe liczby: {{ list }}</p>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      </ul>
+    {% endif %}
+    {% endwith %}
+    {% if selected_numbers %}
+      <p id="chosen" style="color:yellow">Wybrane liczby: {{ selected_numbers }}</p>
+    {% endif %}    
+    <script>
+    function checkDuplicates() {
+  var inputs = document.querySelectorAll('input[type="number"]');
+  var values = Array.prototype.map.call(inputs, function(input) {
+    return input.value;
+  });
+  var filledInputs = values.filter(function(val) {
+    return val !== "";
+  }).length;
+  if (filledInputs === 6) {
+    var uniqueValues = values.filter(function(val, i, arr) {
+      return val !== "" && arr.indexOf(val) === i;
+    });
+    if (uniqueValues.length !== values.filter(val => val !== "").length) {
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('errorMsg').textContent = "Liczby się powtarzają!";
+    } else {
+      document.getElementById('submitBtn').disabled = false;
+      var errorMsg = document.getElementById('errorMsg');
+      if (errorMsg.textContent === "Liczby się powtarzają!") {
+        errorMsg.textContent = "";
+      }
+    }
+  }
+}
+    </script>
+  </body>
+</html>
